@@ -4,11 +4,13 @@ const { chromium } = require("playwright");
 const URL = "https://lolchess.gg/favorites?id=ee9acd22402e4571ace9a6c4d326c5d4";
 
 (async () => {
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
   const page = await browser.newPage();
-  await page.goto(URL, { waitUntil: "networkidle" });
+  await page.goto(URL, { waitUntil: "networkidle", timeout: 90000 });
 
-  // 모든 멤버 가져오기
   const players = await page.$$eval(".favorites__list .favorites__item", items =>
     items.map((el, i) => {
       const name = el.querySelector(".summoner__name")?.textContent?.trim();
