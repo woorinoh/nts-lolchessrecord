@@ -1,36 +1,42 @@
+// scrape.js
 const fs = require("fs");
-const { chromium } = require("playwright");
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
-const URL = "https://lolchess.gg/favorites?id=ee9acd22402e4571ace9a6c4d326c5d4";
+const ID = "ee9acd22402e4571ace9a6c4d326c5d4"; // 즐겨찾기 ID
+const URL = `https://lolchess.gg/api/favorites?id=${ID}`;
 
 (async () => {
-  const browser = await chromium.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
+  try {
+    // 1. API 요청
+    const res = await fetch(URL);
+    if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
+    const data = await res.json();
 
-  const page = await browser.newPage();
+    // 2. CSV 변환
+    const players = data.favorites; // favorites 배열 안에 각 플레이어 정보
+    if (!players || players.length === 0) {
+      console.log("플레이어 데이터를 가져오지 못했습니다.");
+      return;
+    }
 
-  // domcontentloaded + timeout 120초
-  await page.goto(URL, { waitUntil: "domcontentloaded", timeout: 120000 });
+    const date = new Date().toISOString().slice(0,10).replace(/-/g,"");
+    const time = new Date().toISOString().slice(11,19).replace(/:/g,""); // 중복 방지용 시간
+    const dir = "records";
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
 
-  const players = await page.$$eval(".favorites__list .favorites__item", items =>
-    items.map((el, i) => {
-      const name = el.querySelector(".summoner__name")?.textContent?.trim();
-      const lp = el.querySelector(".league__points")?.textContent?.trim();
-      const profile = el.querySelector("a")?.href;
-      return { rank: i + 1, name, lp, profile };
-    })
-  );
+    const file = `${dir}/${date}_${time}.csv`;
+    const header = "Rank,Name,LP,URL\n";
+    const body = players.map((p, i) => {
+      const name = p.name || "";
+      const lp = p.lp || "";
+      const profile = p.url || "";
+      return `${i+1},${name},${lp},${profile}`;
+    }).join("\n");
 
-  const date = new Date().toISOString().slice(0,10).replace(/-/g,"");
-  const dir = "records";
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+    fs.writeFileSync(file, header + body);
+    console.log(`✅ CSV 생성 완료: ${file}`);
 
-  const file = `${dir}/${date}.csv`;
-  const header = "Rank,Name,LP,URL\n";
-  const body = players.map(p => `${p.rank},${p.name},${p.lp},${p.profile}`).join("\n");
-  fs.writeFileSync(file, header + body);
-
-  await browser.close();
+  } catch (err) {
+    console.error("❌ 스크래핑 실패:", err);
+  }
 })();
