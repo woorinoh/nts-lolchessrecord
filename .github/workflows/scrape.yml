@@ -1,0 +1,29 @@
+name: Scrape lolchess favorites
+
+on:
+  schedule:
+    - cron: "0 22 * * *" # 매일 KST 07:00 (GitHub = UTC 기준)
+  workflow_dispatch: {}
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    - name: Install Playwright
+      run: npm i playwright
+
+    - name: Run Scraper
+      run: node scrape.js
+
+    - name: Save CSV
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: "Daily lolchess snapshot"
