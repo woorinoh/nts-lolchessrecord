@@ -2,7 +2,11 @@ name: Scrape lolchess favorites
 
 on:
   schedule:
+    - cron: "37 16 * * *"  # KST 01:37
+    - cron: "40 16 * * *"  # KST 01:40 -> UTC 16:40
+    - cron: "00 17 * * *"  # KST 02:00 -> UTC 17:00    
     - cron: "0 22 * * *" # 매일 KST 07:00 (GitHub = UTC 기준)
+    
   workflow_dispatch: {}
 
 jobs:
