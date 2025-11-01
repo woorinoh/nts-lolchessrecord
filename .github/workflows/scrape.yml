@@ -4,8 +4,6 @@ on:
   schedule:
     - cron: "45 16 * * *"  # KST 01:45
     - cron: "00 17 * * *"  # KST 02:00
-    - cron: "00 22 * * *"  # KST 07:00 (원래 타임)
-    
   workflow_dispatch: {}  # 수동 실행 가능
 
 jobs:
@@ -22,10 +20,8 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install Playwright & Browsers
-        run: |
-          npm i playwright
-          npx playwright install
+      - name: Install Dependencies
+        run: npm install node-fetch
 
       - name: Run Scraper
         run: node scrape.js
