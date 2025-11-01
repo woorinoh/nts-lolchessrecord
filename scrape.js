@@ -8,6 +8,7 @@ const URL = "https://lolchess.gg/favorites?id=ee9acd22402e4571ace9a6c4d326c5d4";
   const page = await browser.newPage();
   await page.goto(URL, { waitUntil: "networkidle" });
 
+  // 모든 멤버 가져오기
   const players = await page.$$eval(".favorites__list .favorites__item", items =>
     items.map((el, i) => {
       const name = el.querySelector(".summoner__name")?.textContent?.trim();
