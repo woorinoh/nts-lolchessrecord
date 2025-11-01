@@ -9,7 +9,9 @@ const URL = "https://lolchess.gg/favorites?id=ee9acd22402e4571ace9a6c4d326c5d4";
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
   const page = await browser.newPage();
-  await page.goto(URL, { waitUntil: "networkidle", timeout: 90000 });
+
+  // domcontentloaded로 로딩 기준 변경 + timeout 120초
+  await page.goto(URL, { waitUntil: "domcontentloaded", timeout: 120000 });
 
   const players = await page.$$eval(".favorites__list .favorites__item", items =>
     items.map((el, i) => {
